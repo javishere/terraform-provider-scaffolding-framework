@@ -276,6 +276,21 @@ func (r *orderResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *orderResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var destroy orderResourceModel
+	diags := req.State.Get(ctx, &destroy)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := r.client.DeleteOrder(destroy.ID.ValueString()); err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting resource",
+			"Could not delete resource: "+destroy.ID.String()+" err: "+err.Error(),
+		)
+		return
+	}
+
 }
 
 // Configure adds the provider configured client to the resource.
