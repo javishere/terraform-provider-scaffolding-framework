@@ -18,15 +18,16 @@ resource "hashicups_order" "edu" {
     coffee = {
       id = 3
     }
-    quantity = 2
-    }, {
-    coffee = {
-      id = 1
-    }
-    quantity = 2
-    }
-  ]
+    quantity = 5
+    },
+    {
+      coffee = {
+        id = 2
+      }
+      quantity = 9
+  }]
 }
+
 
 output "edu_order" {
   value = hashicups_order.edu
