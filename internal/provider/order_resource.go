@@ -210,8 +210,8 @@ func (r *orderResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 }
 
+// Update updates the resource and sets the updated Terraform state on success.
 func (r *orderResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Retrieve values from plan
 	var plan orderResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -219,7 +219,6 @@ func (r *orderResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	// Generate API request body from plan
 	var hashicupsItems []hashicups.OrderItem
 	for _, item := range plan.Items {
 		hashicupsItems = append(hashicupsItems, hashicups.OrderItem{
@@ -230,14 +229,12 @@ func (r *orderResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		})
 	}
 
-	// Update existing order
 	_, err := r.client.UpdateOrder(plan.ID.ValueString(), hashicupsItems)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Updating HashiCups Order",
-			"Could not update order, unexpected error: "+err.Error(),
+			"Error updating hashicops orders",
+			"Could not update hashicops order ID: "+plan.ID.ValueString()+": "+err.Error(),
 		)
-		return
 	}
 
 	// Fetch updated items from GetOrder as UpdateOrder items are not
@@ -251,7 +248,7 @@ func (r *orderResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	// Update resource state with updated items and timestamp
+	// Overwrite items with refreshed state
 	plan.Items = []orderItemModel{}
 	for _, item := range order.Items {
 		plan.Items = append(plan.Items, orderItemModel{
@@ -268,11 +265,13 @@ func (r *orderResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 
+	// Set refreshed state
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
